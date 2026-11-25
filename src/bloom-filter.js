@@ -1,29 +1,27 @@
-import { NotImplementedError } from "../extensions/index.js";
-
 export default class BloomFilter {
   /**
    * @param {number} size - the size of the storage.
    */
-  constructor() {
+  constructor(size = 100) {
     // Bloom filter size directly affects the likelihood of false positives.
     // The bigger the size the lower the likelihood of false positives.
+    this.size = size;
+    this.store = this.createStore(size);
   }
 
   /**
    * @param {string} item
    */
-  insert(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  insert(item) {
+    this.getHashValues(item).forEach((hash) => this.store.setValue(hash));
   }
 
   /**
    * @param {string} item
    * @return {boolean}
    */
-  mayContain(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  mayContain(item) {
+    return this.getHashValues(item).every((hash) => this.store.getValue(hash));
   }
 
   /**
@@ -35,36 +33,63 @@ export default class BloomFilter {
    * @param {number} size
    * @return {Object}
    */
-  createStore(/* size */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  createStore(size) {
+    const storage = new Array(size).fill(false);
+
+    return {
+      getValue(index) {
+        return storage[index];
+      },
+      setValue(index) {
+        storage[index] = true;
+      },
+    };
   }
 
   /**
    * @param {string} item
    * @return {number}
    */
-  hash1(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  hash1(item) {
+    let hash = 0;
+
+    for (let i = 0; i < item.length; i += 1) {
+      hash = (hash << 5) + hash + item.charCodeAt(i);
+      hash &= hash;
+      hash = Math.abs(hash);
+    }
+
+    return hash % this.size;
   }
 
   /**
    * @param {string} item
    * @return {number}
    */
-  hash2(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  hash2(item) {
+    let hash = 5381;
+
+    for (let i = 0; i < item.length; i += 1) {
+      hash = (hash << 5) + hash + item.charCodeAt(i);
+    }
+
+    return Math.abs(hash) % this.size;
   }
 
   /**
    * @param {string} item
    * @return {number}
    */
-  hash3(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  hash3(item) {
+    let hash = 0;
+
+    for (let i = 0; i < item.length; i += 1) {
+      hash = (hash << 5) - hash;
+      hash += item.charCodeAt(i);
+      hash &= hash;
+    }
+
+    return Math.abs(hash) % this.size;
   }
 
   /**
@@ -73,8 +98,7 @@ export default class BloomFilter {
    * @param {string} item
    * @return {number[]}
    */
-  getHashValues(/* item */) {
-    throw new NotImplementedError("Not implemented");
-    // remove line with error and write your code here
+  getHashValues(item) {
+    return [this.hash1(item), this.hash2(item), this.hash3(item)];
   }
 }
